@@ -7,7 +7,6 @@ def open_database():
     connection = None
     try:
         params = config()
-        print('Connecting to the PostgreSQL database...')
         connection = psycopg2.connect(**params)
         connection.autocommit = True
 
@@ -20,10 +19,9 @@ def connection_handler(funct):
     def wrapper(*args, **kwargs):
         connection = open_database()
         # we set the cursor_factory parameter to return with a RealDictCursor cursor (cursor which provide dictionaries)
-        dict_cur = connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-        print(dict_cur)
-        ret_value = funct(dict_cur, *args, **kwargs)
-        dict_cur.close()
+        dict_cursor = connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        ret_value = funct(dict_cursor, *args, **kwargs)
+        dict_cursor.close()
         connection.close()
         return ret_value
 
@@ -31,4 +29,11 @@ def connection_handler(funct):
 
 
 
+@connection_handler
+def mentors_first_last_name(cursor):
+    cursor.execute("""
+                    SELECT first_name, last_name FROM mentors;
+                   """)
+    mentors = cursor.fetchall()
+    return mentors
 
